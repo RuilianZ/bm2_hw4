@@ -7,7 +7,11 @@ output: github_document
 
 ```{r}
 library(tidyverse)
+library (nnet)
 ```
+
+
+## Question 1
 
 ```{r}
 data <- c(65, 34, 54, 47, 100, 100,
@@ -34,5 +38,55 @@ chisq.test(contact)
 house <- margin.table(table, margin =c(2, 3))
 
 chisq.test(house)
+```
+
+
+## Question 2
+
+```{r}
+data_full <- data.frame(low = as.vector(table[,1,]),
+                       medium = as.vector(table[,2,]),
+                       high = as.vector(table[,3,]),
+                       contact_dummy = rep(c(1, 2), 3),
+                       house_dummy = rep(c(2, 1, 3), each = 2))
+```
+
+```{r}
+# model 1 - without interaction
+m1 <- multinom(cbind(data_full$low, data_full$medium, data_full$high)
+~ factor(contact_dummy) + factor(house_dummy), data = data_full)
+
+summary(m1)
+
+exp(coef(m1))
+exp(confint(m1))
+
+# model 2 - with interaction
+m2 <- multinom(cbind(data_full$low, data_full$medium, data_full$high)
+~ factor(contact_dummy) +  factor(house_dummy) + factor(contact_dummy)*factor(house_dummy), data = data_full)
+
+summary(m2)
+
+exp(coef(m2))
+exp(confint(m2))
+
+# likelihood ratio test
+TS1 = deviance(m1) - deviance(m2)
+p1= 1 - pchisq(TS1, 4)
+
+
+# goodness of fit
+pihat <- predict(m1, type = "probs")
+m <- rowSums(data_full[,1:3])
+res.pearson <- (data_full[,1:3]-pihat*m)/sqrt(pihat*m)
+G.stat <- sum(res.pearson^2)
+p4 <- 1-pchisq(G.stat, (6-4)*(3-1))
+```
+
+
+## Question 3
+
+```{r}
+
 ```
 
