@@ -19,8 +19,16 @@ library(tidyverse)
     ## x dplyr::lag()    masks stats::lag()
 
 ``` r
-library (nnet)
+library (nnet) # multinom
+library(MASS) # polr
 ```
+
+    ## 
+    ## Attaching package: 'MASS'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     select
 
 ## Question 1
 
@@ -244,3 +252,62 @@ p4 <- 1-pchisq(G.stat, (6-4)*(3-1))
 ```
 
 ## Question 3
+
+``` r
+freq <- c(data_full$low, data_full$medium, data_full$high)
+res <- c(rep(c("L", "M", "H"), c(6, 6, 6)))
+res <- factor(res, levels = c("L", "M", "H"), ordered = T)
+data_ord <- data.frame(res = res, int = rep(data_full$contact_dummy, 3),
+cate = rep(data_full$house_dummy, 3), freq = freq)
+
+# proportional odds model
+m5 <- polr(res ~ factor(int) + factor(cate), data_ord,
+weights = freq, method = "logistic")
+
+summary(m5)
+```
+
+    ## 
+    ## Re-fitting to get Hessian
+
+    ## Call:
+    ## polr(formula = res ~ factor(int) + factor(cate), data = data_ord, 
+    ##     weights = freq, method = "logistic")
+    ## 
+    ## Coefficients:
+    ##                 Value Std. Error t value
+    ## factor(int)2   0.2524    0.09306   2.713
+    ## factor(cate)2  0.5010    0.11675   4.291
+    ## factor(cate)3 -0.2353    0.10521  -2.236
+    ## 
+    ## Intercepts:
+    ##     Value   Std. Error t value
+    ## L|M -0.4964  0.0897    -5.5356
+    ## M|H  0.6161  0.0901     6.8381
+    ## 
+    ## Residual Deviance: 3610.286 
+    ## AIC: 3620.286
+
+``` r
+exp(coef(m5))
+```
+
+    ##  factor(int)2 factor(cate)2 factor(cate)3 
+    ##     1.2871623     1.6502924     0.7903354
+
+``` r
+m6 <- polr(res ~ factor(cate), data_ord, weights = freq)
+TS5 <- deviance(m6) - deviance(m5)
+p5<- 1-pchisq(TS5, 1)
+
+m7 <- polr(res ~ factor(int), data_ord, weights = freq)
+TS6 <- deviance(m7) - deviance(m5)
+p6<- 1-pchisq(TS6, 2)
+
+# Pearson Chi-Square residuals from proportional odds model
+pihat <- predict(m5, type = "probs")
+m <- rowSums(data_full[,1:3])
+res.pearson <- ((data_full[,1:3]-pihat*m)/sqrt(pihat*m)) %>%
+  round(.,2) %>%
+  as.data.frame()
+```

@@ -7,7 +7,8 @@ output: github_document
 
 ```{r}
 library(tidyverse)
-library (nnet)
+library (nnet) # multinom
+library(MASS) # polr
 ```
 
 
@@ -87,6 +88,32 @@ p4 <- 1-pchisq(G.stat, (6-4)*(3-1))
 ## Question 3
 
 ```{r}
+freq <- c(data_full$low, data_full$medium, data_full$high)
+res <- c(rep(c("L", "M", "H"), c(6, 6, 6)))
+res <- factor(res, levels = c("L", "M", "H"), ordered = T)
+data_ord <- data.frame(res = res, int = rep(data_full$contact_dummy, 3),
+cate = rep(data_full$house_dummy, 3), freq = freq)
 
+# proportional odds model
+m5 <- polr(res ~ factor(int) + factor(cate), data_ord,
+weights = freq, method = "logistic")
+
+summary(m5)
+exp(coef(m5))
+
+m6 <- polr(res ~ factor(cate), data_ord, weights = freq)
+TS5 <- deviance(m6) - deviance(m5)
+p5<- 1-pchisq(TS5, 1)
+
+m7 <- polr(res ~ factor(int), data_ord, weights = freq)
+TS6 <- deviance(m7) - deviance(m5)
+p6<- 1-pchisq(TS6, 2)
+
+# Pearson Chi-Square residuals from proportional odds model
+pihat <- predict(m5, type = "probs")
+m <- rowSums(data_full[,1:3])
+res.pearson <- ((data_full[,1:3]-pihat*m)/sqrt(pihat*m)) %>%
+  round(.,2) %>%
+  as.data.frame()
 ```
 
