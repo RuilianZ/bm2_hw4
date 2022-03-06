@@ -24,3 +24,15 @@ table <- array(
 ftable(table)
 ```
 
+```{r}
+# test on levels of satisfaction and contact with other residents
+contact <- margin.table(table, margin =c(1, 2))
+
+chisq.test(contact)
+
+# test on levels of satisfaction and type of housing
+house <- margin.table(table, margin =c(2, 3))
+
+chisq.test(house)
+```
+

@@ -41,3 +41,29 @@ ftable(table)
     ## High    Low satisfaction                  34       141   130
     ##         Medium Satisfaction               47       116   105
     ##         High Satisfaction                100       191   104
+
+``` r
+# test on levels of satisfaction and contact with other residents
+contact <- margin.table(table, margin =c(1, 2))
+
+chisq.test(contact)
+```
+
+    ## 
+    ##  Pearson's Chi-squared test
+    ## 
+    ## data:  contact
+    ## X-squared = 5.1398, df = 2, p-value = 0.07654
+
+``` r
+# test on levels of satisfaction and type of housing
+house <- margin.table(table, margin =c(2, 3))
+
+chisq.test(house)
+```
+
+    ## 
+    ##  Pearson's Chi-squared test
+    ## 
+    ## data:  house
+    ## X-squared = 34.024, df = 4, p-value = 7.369e-07
